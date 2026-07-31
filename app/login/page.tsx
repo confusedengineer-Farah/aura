@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { login } from "@/lib/auth";
+import { login, googleLogin } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,6 +26,20 @@ export default function LoginPage() {
       alert("Invalid email or password.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    setGoogleLoading(true);
+
+    try {
+      await googleLogin();
+      router.push("/dashboard");
+    } catch (error) {
+      console.error(error);
+      alert("Google sign in failed.");
+    } finally {
+      setGoogleLoading(false);
     }
   }
 
@@ -60,7 +75,7 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || googleLoading}
             className="w-full rounded-lg bg-purple-600 py-3 font-semibold hover:bg-purple-700 transition disabled:opacity-50"
           >
             {loading ? "Logging in..." : "Login"}
@@ -68,9 +83,11 @@ export default function LoginPage() {
         </form>
 
         <button
-          className="w-full mt-4 rounded-lg border border-slate-700 py-3 hover:bg-slate-800 transition"
+          onClick={handleGoogleLogin}
+          disabled={loading || googleLoading}
+          className="w-full mt-4 rounded-lg border border-slate-700 py-3 hover:bg-slate-800 transition disabled:opacity-50"
         >
-          Continue with Google
+          {googleLoading ? "Signing in..." : "Continue with Google"}
         </button>
 
         <p className="mt-6 text-center text-slate-400">
