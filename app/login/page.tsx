@@ -1,4 +1,33 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { login } from "@/lib/auth";
+
 export default function LoginPage() {
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+
+    setLoading(true);
+
+    try {
+      await login(email, password);
+      router.push("/dashboard");
+    } catch (error) {
+      console.error(error);
+      alert("Invalid email or password.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <main className="min-h-screen flex items-center justify-center bg-slate-950 text-white px-6">
       <div className="w-full max-w-md bg-slate-900 rounded-2xl p-8 shadow-lg">
@@ -10,24 +39,31 @@ export default function LoginPage() {
           Login to continue your Aura journey.
         </p>
 
-        <form className="mt-8 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
           <input
             type="email"
             placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
             className="w-full rounded-lg bg-slate-800 p-3 outline-none focus:ring-2 focus:ring-purple-500"
           />
 
           <input
             type="password"
             placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
             className="w-full rounded-lg bg-slate-800 p-3 outline-none focus:ring-2 focus:ring-purple-500"
           />
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-purple-600 py-3 font-semibold hover:bg-purple-700 transition"
+            disabled={loading}
+            className="w-full rounded-lg bg-purple-600 py-3 font-semibold hover:bg-purple-700 transition disabled:opacity-50"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
@@ -39,9 +75,9 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-slate-400">
           Don't have an account?{" "}
-          <a href="/signup" className="text-purple-400 hover:underline">
+          <Link href="/signup" className="text-purple-400 hover:underline">
             Sign Up
-          </a>
+          </Link>
         </p>
       </div>
     </main>
