@@ -1,17 +1,26 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { login, googleLogin } from "@/lib/auth";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, authLoading, router]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,10 +29,25 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+
+      toast.success("Welcome back 👋");
+
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Invalid email or password.");
+
+      switch (error.code) {
+        case "auth/invalid-credential":
+          toast.error("Invalid email or password.");
+          break;
+
+        case "auth/too-many-requests":
+          toast.error("Too many attempts. Try again later.");
+          break;
+
+        default:
+          toast.error("Login failed.");
+      }
     } finally {
       setLoading(false);
     }
@@ -34,10 +58,16 @@ export default function LoginPage() {
 
     try {
       await googleLogin();
+
+      toast.success("Signed in with Google 🎉");
+
       router.push("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      alert("Google sign in failed.");
+
+      if (error.code !== "auth/popup-closed-by-user") {
+        toast.error("Google Sign-In failed.");
+      }
     } finally {
       setGoogleLoading(false);
     }
