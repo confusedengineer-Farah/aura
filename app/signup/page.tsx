@@ -1,17 +1,26 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { signUp } from "@/lib/auth";
+import { useAuth } from "@/providers/AuthProvider";
 
 export default function SignupPage() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace("/dashboard");
+    }
+  }, [user, authLoading, router]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,10 +29,29 @@ export default function SignupPage() {
 
     try {
       await signUp(name, email, password);
-      router.push("/login");
-    } catch (error) {
+
+      toast.success("Account created successfully 🎉");
+
+      router.push("/dashboard");
+    } catch (error: any) {
       console.error(error);
-      alert("Failed to create account.");
+
+      switch (error.code) {
+        case "auth/email-already-in-use":
+          toast.error("Email already exists.");
+          break;
+
+        case "auth/weak-password":
+          toast.error("Password should be at least 6 characters.");
+          break;
+
+        case "auth/invalid-email":
+          toast.error("Invalid email address.");
+          break;
+
+        default:
+          toast.error("Failed to create account.");
+      }
     } finally {
       setLoading(false);
     }
