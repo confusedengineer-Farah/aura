@@ -1,11 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, HeartHandshake, LogOut } from "lucide-react";
+import {
+  CalendarDays,
+  HeartHandshake,
+  LogOut,
+} from "lucide-react";
 
-import { useAuth } from "@/providers/AuthProvider";
+import {
+  doc,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
+
+import { db } from "@/lib/firebase";
 import { logout } from "@/lib/auth";
+import { useAuth } from "@/providers/AuthProvider";
 
 import Avatar from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
@@ -13,9 +24,19 @@ import Card from "@/components/ui/Card";
 import SectionTitle from "@/components/ui/SectionTitle";
 import FullScreenLoader from "@/components/ui/FullScreenLoader";
 
+const moods = [
+  { emoji: "😊", value: "happy" },
+  { emoji: "😌", value: "calm" },
+  { emoji: "😔", value: "sad" },
+  { emoji: "😠", value: "angry" },
+  { emoji: "😰", value: "anxious" },
+];
+
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+
+  const [selectedMood, setSelectedMood] = useState<string>("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -23,13 +44,9 @@ export default function DashboardPage() {
     }
   }, [loading, user, router]);
 
-  if (loading) {
-    return <FullScreenLoader />;
-  }
+  if (loading) return <FullScreenLoader />;
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const hour = new Date().getHours();
 
@@ -52,15 +69,23 @@ export default function DashboardPage() {
     router.replace("/login");
   }
 
+  async function selectMood(mood: string) {
+    setSelectedMood(mood);
+
+    await setDoc(
+      doc(db, "users", user.uid, "moods", new Date().toISOString()),
+      {
+        mood,
+        createdAt: serverTimestamp(),
+      }
+    );
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 text-white">
       <div className="mx-auto max-w-7xl p-6">
-
-        {/* Hero */}
-
         <Card className="bg-gradient-to-r from-purple-700 via-purple-600 to-indigo-700 border-none">
           <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-
             <div>
               <SectionTitle
                 title={`${greeting}, ${user.displayName || "Friend"} 👋`}
@@ -79,48 +104,38 @@ export default function DashboardPage() {
               name={user.displayName}
               size="lg"
             />
-
           </div>
         </Card>
 
-        {/* Dashboard Grid */}
-
         <div className="mt-8 grid gap-6 lg:grid-cols-3">
-
-          {/* Mood */}
-
           <Card hover className="lg:col-span-2">
             <SectionTitle
               title="Today's Mood"
               subtitle="How are you feeling today?"
             />
 
-            <div className="mt-6 flex flex-wrap gap-4 text-4xl">
-
-              <button className="transition hover:scale-110">
-                😊
-              </button>
-
-              <button className="transition hover:scale-110">
-                😌
-              </button>
-
-              <button className="transition hover:scale-110">
-                😔
-              </button>
-
-              <button className="transition hover:scale-110">
-                😠
-              </button>
-
-              <button className="transition hover:scale-110">
-                😰
-              </button>
-
+            <div className="mt-6 flex flex-wrap gap-4">
+              {moods.map((mood) => (
+                <button
+                  key={mood.value}
+                  onClick={() => selectMood(mood.value)}
+                  className={`text-5xl transition-all duration-200 hover:scale-110 ${
+                    selectedMood === mood.value
+                      ? "scale-125"
+                      : "opacity-70"
+                  }`}
+                >
+                  {mood.emoji}
+                </button>
+              ))}
             </div>
-          </Card>
 
-          {/* Profile */}
+            {selectedMood && (
+              <p className="mt-6 text-purple-400 font-medium">
+                Mood saved: {selectedMood}
+              </p>
+            )}
+          </Card>
 
           <Card>
             <SectionTitle
@@ -129,7 +144,6 @@ export default function DashboardPage() {
             />
 
             <div className="mt-6 flex flex-col items-center">
-
               <Avatar
                 src={user.photoURL}
                 name={user.displayName}
@@ -154,12 +168,9 @@ export default function DashboardPage() {
                   Logout
                 </div>
               </Button>
-
             </div>
           </Card>
-
         </div>
-
       </div>
     </main>
   );
