@@ -4,13 +4,15 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/providers/AuthProvider";
+
 import FullScreenLoader from "@/components/ui/FullScreenLoader";
 
 import Hero from "@/components/dashboard/Hero";
 import DailyAffirmation from "@/components/dashboard/DailyAffirmation";
 import MoodSelector from "@/components/dashboard/MoodSelector";
-import MoodHistory from "@/components/dashboard/MoodHistory";
+import MoodStreak from "@/components/dashboard/MoodStreak";
 import QuickActions from "@/components/dashboard/QuickActions";
+import MoodHistory from "@/components/dashboard/MoodHistory";
 import ProfileCard from "@/components/dashboard/ProfileCard";
 
 export default function DashboardPage() {
@@ -40,6 +42,7 @@ export default function DashboardPage() {
         />
 
         <div className="grid gap-6 lg:grid-cols-3">
+          {/* Left Section */}
           <div className="space-y-6 lg:col-span-2">
             <DailyAffirmation />
 
@@ -50,11 +53,16 @@ export default function DashboardPage() {
             <MoodHistory uid={user.uid} />
           </div>
 
-          <ProfileCard
-            name={user.displayName}
-            email={user.email}
-            photoURL={user.photoURL}
-          />
+          {/* Right Section */}
+          <div className="space-y-6">
+            <ProfileCard
+              name={user.displayName}
+              email={user.email}
+              photoURL={user.photoURL}
+            />
+
+            <MoodStreak uid={user.uid} />
+          </div>
         </div>
       </div>
     </main>
