@@ -7,6 +7,7 @@ import { useAuth } from "@/providers/AuthProvider";
 import FullScreenLoader from "@/components/ui/FullScreenLoader";
 
 import Hero from "@/components/dashboard/Hero";
+import DailyAffirmation from "@/components/dashboard/DailyAffirmation";
 import MoodSelector from "@/components/dashboard/MoodSelector";
 import MoodHistory from "@/components/dashboard/MoodHistory";
 import QuickActions from "@/components/dashboard/QuickActions";
@@ -32,7 +33,7 @@ export default function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-7xl p-6 space-y-6">
+      <div className="mx-auto max-w-7xl space-y-6 p-6">
         <Hero
           name={user.displayName || "Friend"}
           photoURL={user.photoURL}
@@ -40,6 +41,8 @@ export default function DashboardPage() {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
+            <DailyAffirmation />
+
             <MoodSelector uid={user.uid} />
 
             <QuickActions />
