@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
@@ -16,6 +16,8 @@ import { Mentor } from "@/types/mentor";
 import { useAuth } from "@/providers/AuthProvider";
 
 import MentorCard from "@/components/mentor/MentorCard";
+import MentorFilters from "@/components/mentor/MentorFilters";
+
 import FullScreenLoader from "@/components/ui/FullScreenLoader";
 import EmptyState from "@/components/ui/EmptyState";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -26,6 +28,9 @@ export default function MentorPage() {
 
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [loadingMentors, setLoadingMentors] = useState(true);
+
+  const [search, setSearch] = useState("");
+  const [availableOnly, setAvailableOnly] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -40,7 +45,7 @@ export default function MentorPage() {
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const mentorData = snapshot.docs.map((doc) => ({
+      const mentorData: Mentor[] = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...(doc.data() as Omit<Mentor, "id">),
       }));
@@ -52,6 +57,23 @@ export default function MentorPage() {
     return unsubscribe;
   }, []);
 
+  const filteredMentors = useMemo(() => {
+    return mentors.filter((mentor) => {
+      const matchesSearch =
+        mentor.name
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+        mentor.specialization
+          .toLowerCase()
+          .includes(search.toLowerCase());
+
+      const matchesAvailability =
+        !availableOnly || mentor.isAvailable;
+
+      return matchesSearch && matchesAvailability;
+    });
+  }, [mentors, search, availableOnly]);
+
   async function handleRequest(mentor: Mentor) {
     if (!user) return;
 
@@ -59,11 +81,11 @@ export default function MentorPage() {
       await requestMentor(user.uid, mentor.id);
 
       toast.success(
-        `Mentor request sent to ${mentor.name} 💜`
+        `Request sent to ${mentor.name} 💜`
       );
     } catch (error) {
       console.error(error);
-      toast.error("Failed to send mentor request.");
+      toast.error("Failed to send request.");
     }
   }
 
@@ -80,14 +102,21 @@ export default function MentorPage() {
           subtitle="Connect with experienced mentors ready to support you."
         />
 
-        {mentors.length === 0 ? (
+        <MentorFilters
+          search={search}
+          setSearch={setSearch}
+          availableOnly={availableOnly}
+          setAvailableOnly={setAvailableOnly}
+        />
+
+        {filteredMentors.length === 0 ? (
           <EmptyState
-            title="No mentors available"
-            description="Please check again later."
+            title="No mentors found"
+            description="Try changing your search or filters."
           />
         ) : (
-          <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {mentors.map((mentor) => (
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {filteredMentors.map((mentor) => (
               <MentorCard
                 key={mentor.id}
                 mentor={mentor}
