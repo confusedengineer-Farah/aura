@@ -17,6 +17,7 @@ import { useAuth } from "@/providers/AuthProvider";
 
 import MentorCard from "@/components/mentor/MentorCard";
 import MentorFilters from "@/components/mentor/MentorFilters";
+import MentorProfileModal from "@/components/mentor/MentorProfileModal";
 
 import FullScreenLoader from "@/components/ui/FullScreenLoader";
 import EmptyState from "@/components/ui/EmptyState";
@@ -31,6 +32,11 @@ export default function MentorPage() {
 
   const [search, setSearch] = useState("");
   const [availableOnly, setAvailableOnly] = useState(false);
+
+  const [selectedMentor, setSelectedMentor] =
+    useState<Mentor | null>(null);
+
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -83,10 +89,17 @@ export default function MentorPage() {
       toast.success(
         `Request sent to ${mentor.name} 💜`
       );
+
+      setModalOpen(false);
     } catch (error) {
       console.error(error);
       toast.error("Failed to send request.");
     }
+  }
+
+  function handleViewProfile(mentor: Mentor) {
+    setSelectedMentor(mentor);
+    setModalOpen(true);
   }
 
   if (loading || loadingMentors) {
@@ -94,39 +107,47 @@ export default function MentorPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white">
-      <div className="mx-auto max-w-7xl p-6">
-
-        <SectionTitle
-          title="Find a Mentor"
-          subtitle="Connect with experienced mentors ready to support you."
-        />
-
-        <MentorFilters
-          search={search}
-          setSearch={setSearch}
-          availableOnly={availableOnly}
-          setAvailableOnly={setAvailableOnly}
-        />
-
-        {filteredMentors.length === 0 ? (
-          <EmptyState
-            title="No mentors found"
-            description="Try changing your search or filters."
+    <>
+      <main className="min-h-screen bg-slate-950 text-white">
+        <div className="mx-auto max-w-7xl p-6">
+          <SectionTitle
+            title="Find a Mentor"
+            subtitle="Connect with experienced mentors ready to support you."
           />
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {filteredMentors.map((mentor) => (
-              <MentorCard
-                key={mentor.id}
-                mentor={mentor}
-                onRequest={handleRequest}
-              />
-            ))}
-          </div>
-        )}
 
-      </div>
-    </main>
+          <MentorFilters
+            search={search}
+            setSearch={setSearch}
+            availableOnly={availableOnly}
+            setAvailableOnly={setAvailableOnly}
+          />
+
+          {filteredMentors.length === 0 ? (
+            <EmptyState
+              title="No mentors found"
+              description="Try changing your search or filters."
+            />
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {filteredMentors.map((mentor) => (
+                <MentorCard
+                  key={mentor.id}
+                  mentor={mentor}
+                  onRequest={handleRequest}
+                  onViewProfile={handleViewProfile}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <MentorProfileModal
+        mentor={selectedMentor}
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onRequest={handleRequest}
+      />
+    </>
   );
 }

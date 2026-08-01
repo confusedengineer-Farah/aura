@@ -12,16 +12,19 @@ import { Mentor } from "@/types/mentor";
 interface MentorCardProps {
   mentor: Mentor;
   onRequest: (mentor: Mentor) => void;
+  onViewProfile: (mentor: Mentor) => void;
 }
 
 export default function MentorCard({
   mentor,
   onRequest,
+  onViewProfile,
 }: MentorCardProps) {
   return (
     <Card
       hover
-      className="flex flex-col justify-between"
+      className="flex cursor-pointer flex-col justify-between"
+      onClick={() => onViewProfile(mentor)}
     >
       <div>
         <div className="flex items-center gap-4">
@@ -42,15 +45,9 @@ export default function MentorCard({
           </div>
 
           <Badge
-            variant={
-              mentor.isAvailable
-                ? "success"
-                : "danger"
-            }
+            variant={mentor.isAvailable ? "success" : "danger"}
           >
-            {mentor.isAvailable
-              ? "Available"
-              : "Offline"}
+            {mentor.isAvailable ? "Available" : "Offline"}
           </Badge>
         </div>
 
@@ -70,14 +67,10 @@ export default function MentorCard({
 
           <div className="flex items-center gap-2 text-slate-300">
             <Clock size={18} />
-            <span>
-              {mentor.totalSessions} Sessions
-            </span>
+            <span>{mentor.totalSessions} Sessions</span>
           </div>
 
-          <Badge>
-            {mentor.specialization}
-          </Badge>
+          <Badge>{mentor.specialization}</Badge>
 
           <p className="mt-4 text-sm leading-7 text-slate-400">
             {mentor.bio}
@@ -88,7 +81,10 @@ export default function MentorCard({
       <Button
         className="mt-8"
         disabled={!mentor.isAvailable}
-        onClick={() => onRequest(mentor)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onRequest(mentor);
+        }}
       >
         Request Mentor
       </Button>
