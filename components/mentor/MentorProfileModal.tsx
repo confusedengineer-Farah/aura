@@ -39,7 +39,7 @@ export default function MentorProfileModal({
           <Avatar
             src={mentor.photoURL}
             name={mentor.name}
-            size="xl"
+            size="lg"
           />
 
           <h2 className="mt-4 text-3xl font-bold">
