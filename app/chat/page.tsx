@@ -110,7 +110,7 @@ export default function ChatPage() {
       <div className="border-t border-slate-800 p-4">
         <div className="flex gap-3">
           <input
-            className="flex-1 rounded-xl bg-slate-800 px-4 py-3 outline-none"
+            className="flex-1 rounded-xl bg-slate-800 px-80 py-3 outline-none"
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
