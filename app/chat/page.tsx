@@ -37,8 +37,10 @@ export default function ChatPage() {
   useEffect(() => {
     if (!user) return;
 
+    const userId = user.uid;
+
     async function initChat() {
-      const id = await createChat(user.uid, DEMO_MENTOR_ID);
+      const id = await createChat(userId, DEMO_MENTOR_ID);
 
       setChatId(id);
     }
